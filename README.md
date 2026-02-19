@@ -1,4 +1,3 @@
-@ -1,10 +1,11 @@
 <div align="center">
 
 ![:name](https://count.getloli.com/@astrbot_plugin_memelite?name=astrbot_plugin_memelite&theme=minecraft&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
@@ -9,11 +8,9 @@ _✨ [AstrBot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-@ -13,207 +14,64 @@ _✨ [AstrBot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
+✨ 表情包制作插件 ✨
 
 </div>
-
-# 请谨慎更新v3.0.0
 
 ## 💡 介绍
 
