@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import suppress
 
 import astrbot.core.message.components as Comp
 from astrbot import logger
@@ -19,9 +20,10 @@ class MemePlugin(Star):
         self.conf = config
         self.collector = ParamsCollector(config)
         self.manager = MemeManager(config, self.collector)
+        self._resource_task: asyncio.Task | None = None
 
     async def initialize(self):
-        await self.manager.check_resources()
+        self._resource_task = asyncio.create_task(self.manager.check_resources())
 
     @filter.command("meme帮助", alias={"表情帮助", "meme菜单", "meme列表"})
     async def memes_help(self, event):
@@ -140,4 +142,8 @@ class MemePlugin(Star):
 
     async def terminate(self):
         """插件终止时清理调度器"""
+        if self._resource_task and not self._resource_task.done():
+            self._resource_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._resource_task
         await self.collector.close()
