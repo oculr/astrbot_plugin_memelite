@@ -12,10 +12,10 @@ from astrbot.core.platform.astr_message_event import AstrMessageEvent
 
 def _sort_msg_seg(seg: BaseMessageComponent) -> int:
     """对消息段进行重排序"""
-    if isinstance(seg, Image):
-        return 0
     if isinstance(seg, At):
         return 0
+    if isinstance(seg, Image):
+        return 2
     return 1
 
 
@@ -96,26 +96,34 @@ class ParamsCollector:
         texts: list[str] = []
         options: dict[str, bool | str | int | float] = {}
 
-        chain = sorted(event.get_messages(), key=_sort_msg_seg)
         send_id: str = event.get_sender_id()
         self_id: str = event.get_self_id()
         sender_name: str = str(event.get_sender_name())
+
+
+        # 这里去除首位At机器人的唤醒
+        chain = [seg for seg in event.get_messages()]
+        if chain and isinstance(chain[0], At) and chain[0].qq == self_id:
+            del chain[0]
+        chain.sort(key=_sort_msg_seg)
+
 
         async def _process_segment(seg, name: str):
             if isinstance(seg, Image):
                 if src := seg.url or seg.file:
                     if image := await self._decode_image(src):
                         images.append((name, image))
-            elif isinstance(seg, At) and seg != chain[0]:
+            elif isinstance(seg, At):
                 await self._append_id_info(event, str(seg.qq), images, options)
             elif isinstance(seg, Plain):
                 plains: list[str] = seg.text.strip().split(" ")
                 if plains:
+                    if plains[0] == keyword:
+                        del plains[0]
+
                     # At消息排在前面
                     plains.sort(key=lambda x: 0 if x.startswith("@") else 1)
                     for text in plains:
-                        if text == keyword:
-                            pass
                         # 解析其他参数
                         if "=" in text:
                             k, v = text.split("=", 1)
@@ -133,12 +141,12 @@ class ParamsCollector:
                             texts.append(text)
 
         reply_seg = next((seg for seg in chain if isinstance(seg, Reply)), None)
+        for seg in chain:
+            await _process_segment(seg, options.get("name") or sender_name)
         if reply_seg and reply_seg.chain:
-            name = str(reply_seg.sender_nickname or reply_seg.sender_id)
+            name = str(options.get("name") or reply_seg.sender_nickname or reply_seg.sender_id)
             for seg in reply_seg.chain:
                 await _process_segment(seg, name)
-        for seg in chain:
-            await _process_segment(seg, sender_name)
 
         # 确保图片数量在min_images到max_images之间(参数足够即可)
         if len(images) < params.min_images:
