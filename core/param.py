@@ -13,10 +13,10 @@ from astrbot.core.platform.astr_message_event import AstrMessageEvent
 def _sort_msg_seg(seg: BaseMessageComponent) -> int:
     """对消息段进行重排序"""
     if isinstance(seg, At):
-        return 0
+        return 1
     if isinstance(seg, Image):
         return 2
-    return 1
+    return 0
 
 
 class ParamsCollector:
@@ -86,9 +86,12 @@ class ParamsCollector:
         """补齐昵称、性别、头像信息"""
         if result := await self.get_extra(event, target_id):
             nickname, sex = result
-            options["name"], options["gender"] = nickname, sex
             if avatar := await self.get_avatar(target_id):
-                images.append((nickname, avatar))
+                images.append((options.get("name", nickname), avatar))
+
+    #         若上下文中的options["name"]为空则用at信息设置回去
+            options.setdefault("name", nickname)
+            options.setdefault("gender", sex)
 
     async def collect_params(self, event: AstrMessageEvent, params, keyword):
         """收集参数，返回 (images, texts, options)"""
