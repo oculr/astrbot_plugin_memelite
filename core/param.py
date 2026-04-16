@@ -6,8 +6,17 @@ import aiohttp
 
 from astrbot.api import logger
 from astrbot.core.config.astrbot_config import AstrBotConfig
-from astrbot.core.message.components import At, Image, Plain, Reply
+from astrbot.core.message.components import At, Image, Plain, Reply, BaseMessageComponent
 from astrbot.core.platform.astr_message_event import AstrMessageEvent
+
+
+def _sort_msg_seg(seg: BaseMessageComponent) -> int:
+    """对消息段进行重排序"""
+    if isinstance(seg, Image):
+        return 0
+    if isinstance(seg, At):
+        return 0
+    return 1
 
 
 class ParamsCollector:
@@ -81,13 +90,13 @@ class ParamsCollector:
             if avatar := await self.get_avatar(target_id):
                 images.append((nickname, avatar))
 
-    async def collect_params(self, event: AstrMessageEvent, params):
+    async def collect_params(self, event: AstrMessageEvent, params, keyword):
         """收集参数，返回 (images, texts, options)"""
         images: list[tuple[str, bytes]] = []
         texts: list[str] = []
         options: dict[str, bool | str | int | float] = {}
 
-        chain = event.get_messages()
+        chain = sorted(event.get_messages(), key=_sort_msg_seg)
         send_id: str = event.get_sender_id()
         self_id: str = event.get_self_id()
         sender_name: str = str(event.get_sender_name())
@@ -101,11 +110,17 @@ class ParamsCollector:
                 await self._append_id_info(event, str(seg.qq), images, options)
             elif isinstance(seg, Plain):
                 plains: list[str] = seg.text.strip().split(" ")
-                if len(plains) > 1:
-                    for text in plains[1:]:
+                if plains:
+                    # At消息排在前面
+                    plains.sort(key=lambda x: 0 if x.startswith("@") else 1)
+                    for text in plains:
+                        if text == keyword:
+                            pass
                         # 解析其他参数
                         if "=" in text:
                             k, v = text.split("=", 1)
+                            if k.startswith("--"):
+                                k = k.removeprefix("--")
                             options[k] = v
                         #  解析@qq
                         elif text.startswith("@"):
