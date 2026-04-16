@@ -6,6 +6,7 @@ from astrbot import logger
 from astrbot.api.event import filter
 from astrbot.api.star import Context, Star
 from astrbot.core import AstrBotConfig
+from astrbot.core.message.components import Plain
 from astrbot.core.platform import AstrMessageEvent
 from astrbot.core.star.filter.event_message_type import EventMessageType
 
@@ -110,9 +111,10 @@ class MemePlugin(Star):
         param = event.message_str.removeprefix(self.conf["extra_prefix"])
         if not param:
             return
+        params = [seg.text for seg in event.get_messages() if isinstance(seg, Plain)]
         # 匹配 meme
         keyword = self.manager.match_meme_keyword(
-            text=param, fuzzy_match=self.conf["fuzzy_match"]
+            plain_params=params,text=param, fuzzy_match=self.conf["fuzzy_match"]
         )
         if not keyword or keyword in self.conf["memes_disabled_list"]:
             return

@@ -201,7 +201,7 @@ class MemeManager:
             return False
         return meme_name in self.meme_keywords
 
-    def match_meme_keyword(self, text: str, fuzzy_match: bool) -> str | None:
+    def match_meme_keyword(self, plain_params, text: str, fuzzy_match: bool) -> str | None:
         if not self._ensure_memes_loaded():
             return None
 
@@ -209,6 +209,13 @@ class MemeManager:
             return next((keyword for keyword in self.meme_keywords if keyword in text), None)
 
         first_word = text.split()[0] if text.split() else ""
+
+        if plain_params:
+            param0 = plain_params[0]
+            param0.strip()
+            param0_split = param0.split()
+            first_word = param0_split[0] if param0_split else ""
+
         return next((keyword for keyword in self.meme_keywords if keyword == first_word), None)
 
     async def render_meme_list_image(self) -> bytes | None:
@@ -278,7 +285,8 @@ class MemeManager:
             return None
 
         params = self._get_params(meme)
-        images, texts, options = await self.collect.collect_params(event, params)
+        images, texts, options = await self.collect.collect_params(event, params, keyword)
+        logger.info(f"generate meme options for {options}")
 
         if self.is_py_version:
             meme_images = [image for _, image in images]
