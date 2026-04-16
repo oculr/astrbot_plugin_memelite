@@ -212,8 +212,7 @@ class MemeManager:
 
         if plain_params:
             param0 = plain_params[0]
-            param0.strip()
-            param0_split = param0.split()
+            param0_split = param0.strip().split()
             first_word = param0_split[0] if param0_split else ""
 
         return next((keyword for keyword in self.meme_keywords if keyword == first_word), None)
