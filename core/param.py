@@ -104,7 +104,7 @@ class ParamsCollector:
         sender_name: str = str(event.get_sender_name())
 
 
-        # 这里去除首位At机器人的唤醒
+        # 这里去除首位At，和匹配关键词对齐
         def _prune_msg_chain(_c: list) -> list:
             result = []
             it = iter(_c)
@@ -114,7 +114,7 @@ class ParamsCollector:
                     continue
                 if isinstance(msg, Plain) and not msg.text.strip():
                     continue
-                if isinstance(msg, At) and str(msg.qq) == self_id:
+                if isinstance(msg, At):
                     continue
                 result.append(msg)
                 result.extend(it)
