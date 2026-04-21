@@ -162,7 +162,7 @@ class ParamsCollector:
             await _process_segment(seg, options.get("name") or sender_name)
         if reply_seg and reply_seg.chain:
             name = str(options.get("name") or reply_seg.sender_nickname or reply_seg.sender_id)
-            for seg in reply_seg.chain:
+            for seg in _prune_msg_chain(reply_seg.chain):
                 await _process_segment(seg, name)
 
         # 确保图片数量在min_images到max_images之间(参数足够即可)
