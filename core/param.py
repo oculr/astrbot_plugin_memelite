@@ -105,9 +105,23 @@ class ParamsCollector:
 
 
         # 这里去除首位At机器人的唤醒
-        chain = [seg for seg in event.get_messages()]
-        if chain and isinstance(chain[0], At) and chain[0].qq == self_id:
-            del chain[0]
+        def _prune_msg_chain(_c: list) -> list:
+            result = []
+            it = iter(_c)
+            for msg in it:
+                if isinstance(msg, Reply):
+                    result.append(msg)
+                    continue
+                if isinstance(msg, Plain) and not msg.text.strip():
+                    continue
+                if isinstance(msg, At) and str(msg.qq) == self_id:
+                    continue
+                result.append(msg)
+                result.extend(it)
+                break
+            return result
+
+        chain = _prune_msg_chain([seg for seg in event.get_messages()])
         chain.sort(key=_sort_msg_seg)
 
 
