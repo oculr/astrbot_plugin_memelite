@@ -3,5 +3,5 @@ display_name: 表情包生成器
 desc: 表情包生成器，制作各种沙雕表情
 help: 略
 version: v99.99
-author:
+author: oculr
 repo: https://github.com/oculr/astrbot_plugin_memelite
